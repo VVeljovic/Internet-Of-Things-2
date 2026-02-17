@@ -1,8 +1,11 @@
 import paho.mqtt.client as paho
 import re
 from influxdb import InfluxDBClient
+from datetime import datetime
 
-def add_to_buffer (x,y,z,orientation):
+BATCH_SIZE = 30
+
+def add_to_buffer(x,y,z,orientation):
 	data = {
 		"measurement" : "imu_data",
 		"tags" : {"orientation" : orientation},
@@ -17,13 +20,26 @@ def add_to_buffer (x,y,z,orientation):
 		if len(vertical_array) == BATCH_SIZE:
 			influxClient.write_points(vertical_array)
 			print("vertical buffer stored")
-			
-	if orientation == "HORIZONTAL":
+			vertical_array.clear()
+	
+	elif orientation == "HORIZONTAL":
 		horizontal_array.append(data)
+		if len(horizontal_array) == BATCH_SIZE:
+			influxClient.write_points(horizontal_array)
+			print("horizontal buffer stored")
+			horizontal_array.clear()
+			
+	else:
+		diagonal_array.append(data)
+		if len(diagonal_array) == BATCH_SIZE:
+			influxClient.write_points(diagonal_array)
+			print("diagonal buffer stored")
+			diagonal_array.clear()
 
 def on_connect(client,userdata,flags,rc):
 	print("Connected with code:", rc)
 	client.subscribe("sensors/nano33")
+
 def on_message(client, userdata, msg):
 	message = msg.payload.decode()
 	print("Primljeno:", message)
@@ -38,14 +54,7 @@ def on_message(client, userdata, msg):
 		print(y)
 		print(z)
 		print(label)
-		data = [
-			{
-				"measurement":"imu_data",
-				"tags" : { "location": "arduino_nano_33_ble_sense_lite", "orientation" : label},
-				"fields" : {"x":x, "y":y, "z":z}
-			}]
-		
-		influxClient.write_points(data)
+		add_to_buffer(x,y,z,label)
 
 influxClient = InfluxDBClient(
 	host = 'localhost',
