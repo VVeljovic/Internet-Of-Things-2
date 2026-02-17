@@ -18,3 +18,5 @@ services:
       INFLUXDB_ADMIN_PASSWORD: admin12345
       INFLUXDB_USER: user
       INFLUXDB_USER_PASSWORD: userpass
+    volumes:
+      - ./influxdb-data:/var/lib/influxdb
