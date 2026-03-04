@@ -4,7 +4,11 @@ from influxdb import InfluxDBClient
 from datetime import datetime
 
 BATCH_SIZE = 30
-
+last_measurement = {
+	'x' : 0,
+	'y' : 0,
+	'z' : 0
+}
 def add_to_buffer(x,y,z,orientation):
 	data = {
 		"measurement" : "imu_data",
@@ -54,6 +58,13 @@ def on_message(client, userdata, msg):
 		print(y)
 		print(z)
 		print(label)
+
+		new_measurement = {'x' : x, 'y' : y, 'z' : z}
+		if abs(new_measurement['z'] - last_measurement['z']) > 1:
+			print('alert')
+		last_measurement['x'] = x
+		last_measurement['y'] = y
+		last_measurement['z'] = z
 		add_to_buffer(x,y,z,label)
 
 influxClient = InfluxDBClient(

@@ -8,6 +8,8 @@ services:
     ports:
       - "1883:1883"
       - "9001:9001"
+    networks:
+      - iot2
   influxdb:
     image: influxdb:1.8
     ports:
@@ -20,3 +22,17 @@ services:
       INFLUXDB_USER_PASSWORD: userpass
     volumes:
       - ./influxdb-data:/var/lib/influxdb
+    networks:
+      - iot2
+  grafana:
+    image: grafana/grafana-enterprise:latest
+    container_name: grafana
+    restart: unless-stopped
+    ports:
+      - '3000:3000'
+    networks:   
+      - iot2
+  
+networks:
+  iot2:
+    driver: bridge
