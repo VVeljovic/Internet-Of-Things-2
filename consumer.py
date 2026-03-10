@@ -1,14 +1,21 @@
 import paho.mqtt.client as paho
-import re
 from influxdb import InfluxDBClient
 from datetime import datetime
+import numpy as np
+import tensorflow as tf
+import pickle
 
-BATCH_SIZE = 30
-last_measurement = {
-	'x' : 0,
-	'y' : 0,
-	'z' : 0
-}
+model = tf.keras.models.load_model('imu_orientation_model.h5')
+with open('label_encoder.pkl', 'rb') as f:
+    label_encoder = pickle.load(f)
+
+def predict_orientation(x, y, z):
+    sample = np.array([[x, y, z]])
+    pred = model.predict(sample, verbose=0)
+    return label_encoder.classes_[np.argmax(pred)]
+
+BATCH_SIZE = 10
+
 def add_to_buffer(x,y,z,orientation):
 	data = {
 		"measurement" : "imu_data",
@@ -53,18 +60,13 @@ def on_message(client, userdata, msg):
 		x = float(parts[1])
 		y = float(parts[3])
 		z = float(parts[5])
-		label = parts[7]
+		label = predict_orientation(x, y, z)
 		print(x)
 		print(y)
 		print(z)
 		print(label)
-
-		new_measurement = {'x' : x, 'y' : y, 'z' : z}
-		if abs(new_measurement['z'] - last_measurement['z']) > 1:
+		if label == "VERTICAL":
 			print('alert')
-		last_measurement['x'] = x
-		last_measurement['y'] = y
-		last_measurement['z'] = z
 		add_to_buffer(x,y,z,label)
 
 influxClient = InfluxDBClient(

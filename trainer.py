@@ -3,17 +3,17 @@ import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
-from sklearn.metrics import classification_report, confusion_matrix
 import tensorflow as tf
 from tensorflow import keras
 import pickle
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+print('a')
 client = InfluxDBClient(host='localhost', port = 8086, database='iotdb')
 query = 'SELECT x, y, z, orientation FROM imu_data'
 result = client.query(query)
-
+print('b')
 points = list(result.get_points())
 df = pd.DataFrame(points)
 
@@ -71,12 +71,12 @@ print("\n" + "="*60)
 print("EVALUACIJA")
 print("="*60)
 test_loss, test_acc = model.evaluate(x_test, y_test, verbose=0)
-print(f"\n✅ Test Loss: {test_loss:.4f}")
-print(f"✅ Test Accuracy: {test_acc:.4f} ({test_acc*100:.2f}%)")
+print(f"Test Loss: {test_loss:.4f}")
+print(f"Test Accuracy: {test_acc:.4f} ({test_acc*100:.2f}%)")
 print("\n" + "="*60)
 
 model.save('imu_orientation_model.h5')
-print("✅ Model sačuvan: imu_orientation_model.h5")
+print("Model sačuvan: imu_orientation_model.h5")
 with open('label_encoder.pkl', 'wb') as f:
     pickle.dump(label_encoder, f)
 
@@ -92,4 +92,3 @@ def predict_orientation(x_val, y_val, z_val):
 predict_orientation(0.02, -0.01, 0.98)   # horizontal
 predict_orientation(0.95, 0.03, 0.05)    # vertical
 predict_orientation(0.65, 0.10, 0.70)    # diagonal
-print("\n✅ Gotovo!")
