@@ -15,7 +15,7 @@ def predict_orientation(x, y, z):
     return label_encoder.classes_[np.argmax(pred)]
 
 BATCH_SIZE = 10
-
+anomaly = "VERTICAL"
 def add_to_buffer(x,y,z,orientation):
 	data = {
 		"measurement" : "imu_data",
@@ -50,24 +50,30 @@ def add_to_buffer(x,y,z,orientation):
 def on_connect(client,userdata,flags,rc):
 	print("Connected with code:", rc)
 	client.subscribe("sensors/nano33")
+	client.subscribe("anomaly")
 
 def on_message(client, userdata, msg):
 	message = msg.payload.decode()
 	print("Primljeno:", message)
-	coords = {}
-	if "X:" in message:
-		parts = message.split()
-		x = float(parts[1])
-		y = float(parts[3])
-		z = float(parts[5])
-		label = predict_orientation(x, y, z)
-		print(x)
-		print(y)
-		print(z)
-		print(label)
-		if label == "VERTICAL":
-			print('alert')
-		add_to_buffer(x,y,z,label)
+	if msg.topic == "anomaly":
+		global anomaly
+		anomaly = message
+		print("Nova anomaly labela:", anomaly)
+	elif msg.topic == "sensors/nano33":
+		if "X:" in message:
+			parts = message.split()
+			x = float(parts[1])
+			y = float(parts[3])
+			z = float(parts[5])
+			label = predict_orientation(x, y, z)
+			print(x)
+			print(y)
+			print(z)
+			print(label)
+			if label == anomaly:
+				print('alert')
+				client.publish("notification", label)
+			add_to_buffer(x,y,z,label)
 
 influxClient = InfluxDBClient(
 	host = 'localhost',
