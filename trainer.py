@@ -9,11 +9,9 @@ import pickle
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-print('a')
 client = InfluxDBClient(host='localhost', port = 8086, database='iotdb')
 query = 'SELECT x, y, z, orientation FROM imu_data'
 result = client.query(query)
-print('b')
 points = list(result.get_points())
 df = pd.DataFrame(points)
 
@@ -75,8 +73,8 @@ print(f"Test Loss: {test_loss:.4f}")
 print(f"Test Accuracy: {test_acc:.4f} ({test_acc*100:.2f}%)")
 print("\n" + "="*60)
 
-model.save('imu_orientation_model.h5')
-print("Model sačuvan: imu_orientation_model.h5")
+model.save('imu_orientation_model.keras')
+print("Model sačuvan: imu_orientation_model.keras")
 with open('label_encoder.pkl', 'wb') as f:
     pickle.dump(label_encoder, f)
 

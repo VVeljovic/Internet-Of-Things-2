@@ -5,7 +5,7 @@ import numpy as np
 import tensorflow as tf
 import pickle
 
-model = tf.keras.models.load_model('imu_orientation_model.h5')
+model = tf.keras.models.load_model('imu_orientation_model.keras')
 with open('label_encoder.pkl', 'rb') as f:
     label_encoder = pickle.load(f)
 
@@ -70,6 +70,7 @@ def on_message(client, userdata, msg):
 			print(y)
 			print(z)
 			print(label)
+			print(anomaly)
 			if label == anomaly:
 				print('alert')
 				client.publish("notification", label)
